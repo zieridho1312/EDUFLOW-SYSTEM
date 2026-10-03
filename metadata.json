@@ -1,0 +1,6 @@
+{
+  "name": "EduFlow - Workspace & Administrasi Guru Modern",
+  "description": "All-in-one teacher administration workspace for Kurikulum Merdeka: quick attendance, lesson planner generator, auto-calculated gradebook with narrative descriptions, student behavior logs, and exportable teaching journals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
