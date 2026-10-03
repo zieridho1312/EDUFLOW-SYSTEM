@@ -445,6 +445,14 @@ export const ExportCenterModule: React.FC<ExportCenterModuleProps> = ({ state })
             </div>
           </div>
         </div>
+
+        {/* Document Footer with Copyright */}
+        <div className="pt-8 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+          <span>Dicetak melalui EduFlow Workspace Kurikulum Merdeka</span>
+          <span className="font-medium text-slate-600">
+            &copy; 2026 EduFlow by <strong className="text-emerald-700">@zieridho13</strong>. All rights reserved.
+          </span>
+        </div>
       </div>
     </div>
   );

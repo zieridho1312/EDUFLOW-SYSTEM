@@ -569,6 +569,14 @@ export const TeacherGuideModule: React.FC<TeacherGuideModuleProps> = ({ state })
           </div>
         </div>
       )}
+
+      {/* Guide Footer with Copyright */}
+      <div className="pt-6 border-t border-slate-200/70 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-400">
+        <span>EduFlow — Panduan Resmi Administrasi Guru Kurikulum Merdeka</span>
+        <span className="font-medium text-slate-600">
+          Copyright &copy; 2026 EduFlow by <strong className="text-emerald-700 font-bold">@zieridho13</strong>. All rights reserved.
+        </span>
+      </div>
     </div>
   );
 };

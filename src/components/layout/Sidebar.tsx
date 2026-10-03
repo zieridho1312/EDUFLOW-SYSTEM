@@ -176,6 +176,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span className="font-semibold text-slate-700">EduFlow Studio</span>
           <span className="font-mono text-[10px] text-slate-400">v2.4 LTS</span>
         </div>
+
+        <div className="px-1 text-[10px] text-slate-400 leading-tight">
+          &copy; 2026 EduFlow by <span className="font-bold text-emerald-700">@zieridho13</span>
+        </div>
+
         <button
           onClick={() => {
             if (window.confirm('Muat ulang data simulasi awal EduFlow?')) {

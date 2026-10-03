@@ -10,6 +10,7 @@ import {
   BehaviorLog,
   DailyTeachingJournal,
   StudentAttendanceStatus,
+  AuthAccount,
 } from '../types/database';
 import {
   initialTeacherProfile,
@@ -25,6 +26,19 @@ import {
 } from '../data/initialData';
 
 const STORAGE_KEY = 'eduflow_state_v1';
+const AUTH_SESSION_KEY = 'eduflow_auth_session_v1';
+
+export const initialAccounts: AuthAccount[] = [
+  {
+    id: 'acc-01',
+    email: 'ahmadridho32@guru.sma.belajar.id',
+    password: 'password123',
+    name: 'Ahmad Ridho, S.Pd., Gr.',
+    nip: '19880412 201403 1 003',
+    schoolName: 'SMA Negeri 1 Nusantara',
+    createdAt: '2026-01-01T00:00:00Z',
+  },
+];
 
 export interface EduFlowState {
   teacher: TeacherProfile;
@@ -37,9 +51,23 @@ export interface EduFlowState {
   studentGrades: StudentGradeEntry[];
   behaviorLogs: BehaviorLog[];
   journals: DailyTeachingJournal[];
+  accounts: AuthAccount[];
+  currentUser: AuthAccount | null;
 }
 
 function loadInitialState(): EduFlowState {
+  let savedSession: AuthAccount | null = null;
+  if (typeof window !== 'undefined') {
+    try {
+      const sess = localStorage.getItem(AUTH_SESSION_KEY);
+      if (sess) {
+        savedSession = JSON.parse(sess);
+      }
+    } catch (e) {
+      console.warn('Failed to parse auth session:', e);
+    }
+  }
+
   if (typeof window === 'undefined') {
     return {
       teacher: initialTeacherProfile,
@@ -52,6 +80,8 @@ function loadInitialState(): EduFlowState {
       studentGrades: initialStudentGrades,
       behaviorLogs: initialBehaviorLogs,
       journals: initialTeachingJournals,
+      accounts: initialAccounts,
+      currentUser: savedSession || null,
     };
   }
 
@@ -59,6 +89,7 @@ function loadInitialState(): EduFlowState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
+      const accounts = parsed.accounts && parsed.accounts.length > 0 ? parsed.accounts : initialAccounts;
       return {
         teacher: parsed.teacher || initialTeacherProfile,
         classes: parsed.classes || initialClasses,
@@ -70,6 +101,8 @@ function loadInitialState(): EduFlowState {
         studentGrades: parsed.studentGrades || initialStudentGrades,
         behaviorLogs: parsed.behaviorLogs || initialBehaviorLogs,
         journals: parsed.journals || initialTeachingJournals,
+        accounts,
+        currentUser: savedSession || null,
       };
     }
   } catch (err) {
@@ -87,6 +120,8 @@ function loadInitialState(): EduFlowState {
     studentGrades: initialStudentGrades,
     behaviorLogs: initialBehaviorLogs,
     journals: initialTeachingJournals,
+    accounts: initialAccounts,
+    currentUser: savedSession || null,
   };
 }
 
@@ -126,6 +161,115 @@ class EduFlowStore {
       ...this.state,
       teacher: { ...this.state.teacher, ...partial },
     };
+    this.notify();
+  }
+
+  // Authentication Methods
+  public login(email: string, password: string): { success: boolean; message: string } {
+    const trimmedEmail = email.trim().toLowerCase();
+    const account = this.state.accounts.find(
+      (a) => a.email.toLowerCase() === trimmedEmail && a.password === password
+    );
+
+    if (!account) {
+      return {
+        success: false,
+        message: 'Email atau kata sandi tidak cocok. Silakan periksa kembali atau daftar akun baru.',
+      };
+    }
+
+    this.state = {
+      ...this.state,
+      currentUser: account,
+      teacher: {
+        ...this.state.teacher,
+        name: account.name,
+        nip: account.nip || this.state.teacher.nip,
+        email: account.email,
+        schoolName: account.schoolName || this.state.teacher.schoolName,
+      },
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(account));
+      } catch (e) {
+        console.warn('Could not save auth session:', e);
+      }
+    }
+
+    this.notify();
+    return { success: true, message: `Selamat datang kembali, ${account.name}!` };
+  }
+
+  public signup(data: {
+    name: string;
+    email: string;
+    nip: string;
+    schoolName: string;
+    password: string;
+  }): { success: boolean; message: string } {
+    const trimmedEmail = data.email.trim().toLowerCase();
+    const exists = this.state.accounts.some((a) => a.email.toLowerCase() === trimmedEmail);
+
+    if (exists) {
+      return {
+        success: false,
+        message: 'Email ini sudah terdaftar. Silakan langsung masuk dengan kata sandi Anda.',
+      };
+    }
+
+    const newAccount: AuthAccount = {
+      id: `acc-${Date.now()}`,
+      email: trimmedEmail,
+      password: data.password,
+      name: data.name,
+      nip: data.nip || 'Belum diatur',
+      schoolName: data.schoolName || 'SMA Negeri 1 Nusantara',
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedAccounts = [...this.state.accounts, newAccount];
+
+    this.state = {
+      ...this.state,
+      accounts: updatedAccounts,
+      currentUser: newAccount,
+      teacher: {
+        ...this.state.teacher,
+        name: newAccount.name,
+        nip: newAccount.nip,
+        email: newAccount.email,
+        schoolName: newAccount.schoolName,
+      },
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(newAccount));
+      } catch (e) {
+        console.warn('Could not save auth session:', e);
+      }
+    }
+
+    this.notify();
+    return { success: true, message: 'Pendaftaran berhasil! Akun guru Anda siap digunakan.' };
+  }
+
+  public logout(): void {
+    this.state = {
+      ...this.state,
+      currentUser: null,
+    };
+
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(AUTH_SESSION_KEY);
+      } catch (e) {
+        console.warn('Could not remove auth session:', e);
+      }
+    }
+
     this.notify();
   }
 
@@ -342,6 +486,8 @@ class EduFlowStore {
         studentGrades: stateToLoad.studentGrades || [],
         behaviorLogs: stateToLoad.behaviorLogs || [],
         journals: stateToLoad.journals || [],
+        accounts: stateToLoad.accounts || this.state.accounts,
+        currentUser: this.state.currentUser,
       };
       this.notify();
       return { success: true, message: 'Data cadangan berhasil dipulihkan dengan sempurna!' };
@@ -363,6 +509,8 @@ class EduFlowStore {
       studentGrades: initialStudentGrades,
       behaviorLogs: initialBehaviorLogs,
       journals: initialTeachingJournals,
+      accounts: initialAccounts,
+      currentUser: initialAccounts[0],
     };
     this.notify();
   }

@@ -11,6 +11,7 @@ import { ExportCenterModule } from './components/export/ExportCenterModule';
 import { DatabaseSchemaModule } from './components/schema/DatabaseSchemaModule';
 import { SettingsModule } from './components/settings/SettingsModule';
 import { TeacherGuideModule } from './components/guide/TeacherGuideModule';
+import { AuthModule } from './components/auth/AuthModule';
 import { QuickActionModal } from './components/modals/QuickActionModal';
 import { Menu, X } from 'lucide-react';
 
@@ -20,6 +21,17 @@ export default function App() {
   const [activeClassParam, setActiveClassParam] = useState<string | undefined>(undefined);
   const [showQuickModal, setShowQuickModal] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+
+  // If user is not logged in, show modern green gradient login/signup screen
+  if (!state.currentUser) {
+    return (
+      <AuthModule
+        onLogin={(email, password) => store.login(email, password)}
+        onSignup={(data) => store.signup(data)}
+        registeredAccounts={state.accounts}
+      />
+    );
+  }
 
   const handleNavigateTab = (tab: string, extraParam?: string) => {
     setActiveTab(tab);
@@ -48,6 +60,7 @@ export default function App() {
           onOpenPrintCenter={() => setActiveTab('export')}
           onSelectAction={(tab, param) => handleNavigateTab(tab, param)}
           onOpenSettings={() => setActiveTab('settings')}
+          onLogout={() => store.logout()}
         />
       </div>
 
@@ -174,6 +187,18 @@ export default function App() {
           {activeTab === 'schema' && (
             <DatabaseSchemaModule />
           )}
+
+          {/* Global Footer */}
+          <footer className="mt-12 pt-6 border-t border-slate-200/80 text-xs text-slate-400 no-print flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-slate-600 font-medium">
+              <span className="font-bold text-slate-800">EduFlow</span>
+              <span>·</span>
+              <span>Workspace Guru Kurikulum Merdeka</span>
+            </div>
+            <div className="text-slate-500 font-medium">
+              Copyright &copy; 2026 EduFlow by <span className="font-bold text-emerald-700">@zieridho13</span>. All rights reserved.
+            </div>
+          </footer>
         </main>
       </div>
 

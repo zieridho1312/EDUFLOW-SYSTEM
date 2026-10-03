@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { TeacherProfile } from '../../types/database';
+import { EduFlowLogo } from '../ui/EduFlowLogo';
 import {
   Calendar,
   Clock,
@@ -23,6 +24,7 @@ interface HeaderProps {
   onOpenPrintCenter: () => void;
   onSelectAction: (tab: string, extraParam?: string) => void;
   onOpenSettings: () => void;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -32,6 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPrintCenter,
   onSelectAction,
   onOpenSettings,
+  onLogout,
 }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [quickDropdownOpen, setQuickDropdownOpen] = useState(false);
@@ -88,11 +91,8 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 md:px-8 bg-white border-b border-slate-200 select-none">
       {/* Zone 1: Brand title & Context */}
       <div className="flex items-center gap-3">
-        <a href="/" className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
-          <span className="w-8 h-8 rounded-lg bg-emerald-600 text-white font-extrabold flex items-center justify-center text-sm shadow-xs">
-            EF
-          </span>
-          <span className="bg-gradient-to-r from-slate-900 to-emerald-950 bg-clip-text text-transparent">EduFlow</span>
+        <a href="/" className="hover:opacity-90 transition-opacity">
+          <EduFlowLogo size="sm" />
         </a>
         <span className="hidden md:inline-block text-slate-300">/</span>
         <span className="hidden md:inline-block text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-md truncate max-w-xs">
@@ -243,11 +243,27 @@ export const Header: React.FC<HeaderProps> = ({
                   <Printer className="w-4 h-4 text-slate-500" />
                   <span>Pusat Cetak Dokumen & Jurnal</span>
                 </button>
+
+                <button
+                  onClick={() => {
+                    setProfileDropdownOpen(false);
+                    onLogout();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 transition-colors text-left font-semibold"
+                >
+                  <LogOut className="w-4 h-4 text-rose-500" />
+                  <span>Keluar (Log Out)</span>
+                </button>
               </div>
 
-              <div className="pt-1 border-t border-slate-100 px-4 py-1.5 flex items-center justify-between text-[11px] text-slate-400">
-                <span>Versi 2.4 (Merdeka)</span>
-                <span className="text-emerald-700 font-medium">Online</span>
+              <div className="pt-2 border-t border-slate-100 px-4 py-2 text-[10px] text-slate-400 space-y-0.5">
+                <div className="flex items-center justify-between">
+                  <span>Versi 2.4 (Merdeka)</span>
+                  <span className="text-emerald-700 font-medium">Online</span>
+                </div>
+                <div className="text-slate-500 font-medium pt-0.5">
+                  &copy; 2026 EduFlow by <span className="font-semibold text-emerald-700">@zieridho13</span>
+                </div>
               </div>
             </div>
           )}

@@ -1,5 +1,15 @@
 export type StudentAttendanceStatus = 'H' | 'I' | 'S' | 'A'; // Hadir, Izin, Sakit, Alpa
 
+export interface AuthAccount {
+  id: string;
+  email: string;
+  password: string;
+  name: string;
+  nip: string;
+  schoolName: string;
+  createdAt: string;
+}
+
 export interface TeacherProfile {
   id: string;
   name: string;
