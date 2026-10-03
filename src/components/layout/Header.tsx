@@ -59,6 +59,8 @@ export const Header: React.FC<HeaderProps> = ({
     switch (tab) {
       case 'dashboard':
         return 'Dashboard Guru';
+      case 'classes':
+        return 'Kelola Kelas & Siswa';
       case 'planner':
         return 'Modul Ajar (Planner)';
       case 'attendance':

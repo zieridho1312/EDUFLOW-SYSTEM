@@ -1,5 +1,7 @@
 export type StudentAttendanceStatus = 'H' | 'I' | 'S' | 'A'; // Hadir, Izin, Sakit, Alpa
 
+export type EducationLevel = 'SD' | 'SMP' | 'SMA' | 'SMK';
+
 export interface AuthAccount {
   id: string;
   email: string;
@@ -27,9 +29,10 @@ export interface TeacherProfile {
 
 export interface SchoolClass {
   id: string;
-  name: string; // e.g. "X-1", "X-2", "XI-IPA 1", "XI-IPA 2"
-  grade: number; // 10, 11, 12
-  major: string; // "Fase E (Umum)", "MIPA", "IPS"
+  name: string; // e.g. "Kelas 4-A", "Kelas 7-B", "Kelas X-A", "Kelas XI-MIPA 1"
+  level: EducationLevel; // 'SD' | 'SMP' | 'SMA' | 'SMK'
+  grade: number; // 1 to 12
+  major: string; // "Fase A", "Fase B", "Fase C", "Fase D", "Fase E", "Fase F"
   totalStudents: number;
   room: string;
 }

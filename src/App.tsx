@@ -11,6 +11,7 @@ import { ExportCenterModule } from './components/export/ExportCenterModule';
 import { DatabaseSchemaModule } from './components/schema/DatabaseSchemaModule';
 import { SettingsModule } from './components/settings/SettingsModule';
 import { TeacherGuideModule } from './components/guide/TeacherGuideModule';
+import { ClassStudentManagerModule } from './components/classes/ClassStudentManagerModule';
 import { AuthModule } from './components/auth/AuthModule';
 import { QuickActionModal } from './components/modals/QuickActionModal';
 import { Menu, X } from 'lucide-react';
@@ -123,6 +124,19 @@ export default function App() {
             />
           )}
 
+          {activeTab === 'classes' && (
+            <ClassStudentManagerModule
+              classes={state.classes}
+              students={state.students}
+              onAddClass={(data) => store.addClass(data)}
+              onDeleteClass={(id) => store.deleteClass(id)}
+              onAddStudent={(data) => store.addStudent(data)}
+              onDeleteStudent={(id) => store.deleteStudent(id)}
+              onImportClassesAndStudents={(c, s) => store.importClassesAndStudents(c, s)}
+              onNavigateTab={handleNavigateTab}
+            />
+          )}
+
           {activeTab === 'planner' && (
             <SmartPlannerModule
               plans={state.lessonPlans}
@@ -139,6 +153,7 @@ export default function App() {
               sessions={state.attendanceSessions}
               onSaveSession={(sess) => store.saveAttendanceSession(sess)}
               defaultClassId={activeClassParam}
+              onOpenClassManager={() => setActiveTab('classes')}
             />
           )}
 
@@ -154,6 +169,7 @@ export default function App() {
               onAddGradeItem={(item) => store.addGradeItem(item)}
               onDeleteGradeItem={(id) => store.deleteGradeItem(id)}
               defaultClassId={activeClassParam}
+              onOpenClassManager={() => setActiveTab('classes')}
             />
           )}
 
@@ -165,6 +181,7 @@ export default function App() {
               onAddLog={(log) => store.addBehaviorLog(log)}
               onDeleteLog={(id) => store.deleteBehaviorLog(id)}
               defaultClassId={activeClassParam}
+              onOpenClassManager={() => setActiveTab('classes')}
             />
           )}
 

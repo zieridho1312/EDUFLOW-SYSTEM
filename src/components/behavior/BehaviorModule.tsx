@@ -27,6 +27,7 @@ interface BehaviorModuleProps {
   onDeleteLog: (id: string) => void;
   defaultClassId?: string;
   onOpenNewModalDirect?: boolean;
+  onOpenClassManager?: () => void;
 }
 
 const P3_DIMENSIONS = [
@@ -47,6 +48,7 @@ export const BehaviorModule: React.FC<BehaviorModuleProps> = ({
   onDeleteLog,
   defaultClassId,
   onOpenNewModalDirect,
+  onOpenClassManager,
 }) => {
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -150,7 +152,18 @@ export const BehaviorModule: React.FC<BehaviorModuleProps> = ({
         {/* Filter bar */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-600">Filter Rombel</label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold text-slate-600">Filter Rombel</label>
+              {onOpenClassManager && (
+                <button
+                  type="button"
+                  onClick={onOpenClassManager}
+                  className="text-[10px] text-emerald-700 hover:underline font-bold"
+                >
+                  + Kelola / Import (.xls)
+                </button>
+              )}
+            </div>
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
@@ -159,7 +172,7 @@ export const BehaviorModule: React.FC<BehaviorModuleProps> = ({
               <option value="all">Semua Rombel / Kelas</option>
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name}
+                  {c.name} [{c.level || 'SMA'}]
                 </option>
               ))}
             </select>

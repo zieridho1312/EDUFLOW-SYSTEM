@@ -28,6 +28,7 @@ interface AttendanceModuleProps {
   sessions: AttendanceSession[];
   onSaveSession: (session: AttendanceSession) => void;
   defaultClassId?: string;
+  onOpenClassManager?: () => void;
 }
 
 export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
@@ -36,6 +37,7 @@ export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
   sessions,
   onSaveSession,
   defaultClassId,
+  onOpenClassManager,
 }) => {
   const [selectedClassId, setSelectedClassId] = useState<string>(
     defaultClassId || classes[0]?.id || ''
@@ -215,7 +217,18 @@ export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
         {/* Filters & Session Details */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-3 border-t border-slate-100">
           <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-slate-600">Rombel / Kelas</label>
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-semibold text-slate-600">Rombel / Kelas</label>
+              {onOpenClassManager && (
+                <button
+                  type="button"
+                  onClick={onOpenClassManager}
+                  className="text-[10px] text-emerald-700 hover:underline font-bold"
+                >
+                  + Kelola / Import (.xls)
+                </button>
+              )}
+            </div>
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
@@ -223,7 +236,7 @@ export const AttendanceModule: React.FC<AttendanceModuleProps> = ({
             >
               {classes.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} ({c.major})
+                  {c.name} [{c.level || 'SMA'}] ({c.major})
                 </option>
               ))}
             </select>

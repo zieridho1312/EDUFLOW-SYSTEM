@@ -30,6 +30,7 @@ export const initialClasses: SchoolClass[] = [
   {
     id: 'cls-x-a',
     name: 'Kelas X-A',
+    level: 'SMA',
     grade: 10,
     major: 'Fase E (Umum)',
     totalStudents: 32,
@@ -38,6 +39,7 @@ export const initialClasses: SchoolClass[] = [
   {
     id: 'cls-x-b',
     name: 'Kelas X-B',
+    level: 'SMA',
     grade: 10,
     major: 'Fase E (Umum)',
     totalStudents: 30,
@@ -46,6 +48,7 @@ export const initialClasses: SchoolClass[] = [
   {
     id: 'cls-xi-mipa1',
     name: 'Kelas XI-MIPA 1',
+    level: 'SMA',
     grade: 11,
     major: 'Fase F (Peminatan Sains & Teknologi)',
     totalStudents: 28,
@@ -54,6 +57,7 @@ export const initialClasses: SchoolClass[] = [
   {
     id: 'cls-xi-mipa2',
     name: 'Kelas XI-MIPA 2',
+    level: 'SMA',
     grade: 11,
     major: 'Fase F (Peminatan Sains & Teknologi)',
     totalStudents: 28,

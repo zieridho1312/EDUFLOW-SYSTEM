@@ -11,6 +11,7 @@ import {
   RotateCcw,
   School,
   BookOpen,
+  Users,
 } from 'lucide-react';
 import { TeacherProfile } from '../../types/database';
 
@@ -33,6 +34,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
       label: 'Dashboard',
       description: 'Ringkasan & jadwal KBM',
       icon: LayoutDashboard,
+    },
+    {
+      id: 'classes',
+      label: 'Kelola Kelas & Siswa',
+      description: 'SD-SMA & import Excel (.xls)',
+      icon: Users,
     },
     {
       id: 'planner',

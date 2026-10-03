@@ -90,9 +90,13 @@ function loadInitialState(): EduFlowState {
     if (raw) {
       const parsed = JSON.parse(raw);
       const accounts = parsed.accounts && parsed.accounts.length > 0 ? parsed.accounts : initialAccounts;
+      const loadedClasses: SchoolClass[] = (parsed.classes || initialClasses).map((c: any) => ({
+        ...c,
+        level: c.level || (c.grade <= 6 ? 'SD' : c.grade <= 9 ? 'SMP' : 'SMA'),
+      }));
       return {
         teacher: parsed.teacher || initialTeacherProfile,
-        classes: parsed.classes || initialClasses,
+        classes: loadedClasses,
         students: parsed.students || initialStudents,
         schedules: parsed.schedules || initialSchedules,
         attendanceSessions: parsed.attendanceSessions || initialAttendanceSessions,
@@ -271,6 +275,212 @@ class EduFlowStore {
     }
 
     this.notify();
+  }
+
+  // Classes & Students Management (SD, SMP, SMA)
+  public addClass(classData: Omit<SchoolClass, 'id' | 'totalStudents'> & { id?: string }): SchoolClass {
+    const newClass: SchoolClass = {
+      id: classData.id || `cls-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      name: classData.name.trim(),
+      level: classData.level || (classData.grade <= 6 ? 'SD' : classData.grade <= 9 ? 'SMP' : 'SMA'),
+      grade: classData.grade,
+      major: classData.major,
+      totalStudents: 0,
+      room: classData.room || 'Ruang Kelas',
+    };
+    this.state = {
+      ...this.state,
+      classes: [...this.state.classes, newClass],
+    };
+    this.notify();
+    return newClass;
+  }
+
+  public updateClass(id: string, partial: Partial<SchoolClass>) {
+    this.state = {
+      ...this.state,
+      classes: this.state.classes.map((c) => (c.id === id ? { ...c, ...partial } : c)),
+    };
+    this.notify();
+  }
+
+  public deleteClass(id: string) {
+    this.state = {
+      ...this.state,
+      classes: this.state.classes.filter((c) => c.id !== id),
+      students: this.state.students.filter((s) => s.classId !== id),
+      attendanceSessions: this.state.attendanceSessions.filter((a) => a.classId !== id),
+    };
+    this.notify();
+  }
+
+  public addStudent(studentData: Omit<Student, 'id'> & { id?: string }): Student {
+    const newStudent: Student = {
+      id: studentData.id || `st-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      classId: studentData.classId,
+      name: studentData.name.trim(),
+      nisn: studentData.nisn || `00${Math.floor(10000000 + Math.random() * 90000000)}`,
+      nis: studentData.nis || `${Math.floor(1000 + Math.random() * 9000)}`,
+      gender: studentData.gender,
+      parentName: studentData.parentName || 'Orang Tua / Wali',
+      parentPhone: studentData.parentPhone || '0812-0000-0000',
+      address: studentData.address || 'Alamat Siswa',
+      avatarUrl: studentData.avatarUrl,
+    };
+
+    const updatedStudents = [...this.state.students, newStudent];
+    const classCount = updatedStudents.filter((s) => s.classId === newStudent.classId).length;
+
+    this.state = {
+      ...this.state,
+      students: updatedStudents,
+      classes: this.state.classes.map((c) =>
+        c.id === newStudent.classId ? { ...c, totalStudents: classCount } : c
+      ),
+    };
+    this.notify();
+    return newStudent;
+  }
+
+  public deleteStudent(id: string) {
+    const target = this.state.students.find((s) => s.id === id);
+    const updatedStudents = this.state.students.filter((s) => s.id !== id);
+    const targetClassId = target?.classId;
+    const classCount = targetClassId
+      ? updatedStudents.filter((s) => s.classId === targetClassId).length
+      : 0;
+
+    this.state = {
+      ...this.state,
+      students: updatedStudents,
+      classes: this.state.classes.map((c) =>
+        c.id === targetClassId ? { ...c, totalStudents: classCount } : c
+      ),
+    };
+    this.notify();
+  }
+
+  public importClassesAndStudents(
+    incomingClasses: Array<{ name: string; level: 'SD' | 'SMP' | 'SMA' | 'SMK'; grade: number; major: string; room?: string }>,
+    incomingStudents: Array<{ name: string; nisn: string; nis?: string; gender: 'L' | 'P'; parentName?: string; parentPhone?: string; className: string }>
+  ): { success: boolean; classesAdded: number; studentsAdded: number; message: string } {
+    let classesAddedCount = 0;
+    let studentsAddedCount = 0;
+
+    const classMap = new Map<string, SchoolClass>();
+    this.state.classes.forEach((c) => {
+      classMap.set(c.name.trim().toLowerCase(), c);
+    });
+
+    const updatedClasses = [...this.state.classes];
+
+    // Ensure classes from incomingClasses exist
+    incomingClasses.forEach((ic) => {
+      const key = ic.name.trim().toLowerCase();
+      if (!classMap.has(key)) {
+        const newClass: SchoolClass = {
+          id: `cls-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          name: ic.name.trim(),
+          level: ic.level,
+          grade: ic.grade,
+          major: ic.major,
+          totalStudents: 0,
+          room: ic.room || 'Ruang Kelas',
+        };
+        classMap.set(key, newClass);
+        updatedClasses.push(newClass);
+        classesAddedCount++;
+      }
+    });
+
+    // Also check if any student's className needs auto-creating a class
+    incomingStudents.forEach((st) => {
+      const key = st.className.trim().toLowerCase();
+      if (!classMap.has(key) && st.className.trim() !== '') {
+        const inferredName = st.className.trim();
+        let inferredLevel: 'SD' | 'SMP' | 'SMA' | 'SMK' = 'SMA';
+        let inferredGrade = 10;
+        let inferredMajor = 'Kurikulum Merdeka';
+
+        if (/^(kelas\s*)?[1-6]([-A-Za-z]|$)/i.test(inferredName)) {
+          inferredLevel = 'SD';
+          const match = inferredName.match(/[1-6]/);
+          inferredGrade = match ? parseInt(match[0]) : 1;
+          inferredMajor = `Fase ${inferredGrade <= 2 ? 'A' : inferredGrade <= 4 ? 'B' : 'C'} (SD)`;
+        } else if (/^(kelas\s*)?[7-9]([-A-Za-z]|$)/i.test(inferredName)) {
+          inferredLevel = 'SMP';
+          const match = inferredName.match(/[7-9]/);
+          inferredGrade = match ? parseInt(match[0]) : 7;
+          inferredMajor = 'Fase D (SMP)';
+        } else if (/^(kelas\s*)?(1[0-2]|X|XI|XII)([-A-Za-z]|$)/i.test(inferredName)) {
+          inferredLevel = 'SMA';
+          inferredGrade = /12|XII/i.test(inferredName) ? 12 : /11|XI/i.test(inferredName) ? 11 : 10;
+          inferredMajor = inferredGrade === 10 ? 'Fase E (Umum)' : 'Fase F (Peminatan)';
+        }
+
+        const newClass: SchoolClass = {
+          id: `cls-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          name: inferredName,
+          level: inferredLevel,
+          grade: inferredGrade,
+          major: inferredMajor,
+          totalStudents: 0,
+          room: 'Ruang Kelas',
+        };
+        classMap.set(key, newClass);
+        updatedClasses.push(newClass);
+        classesAddedCount++;
+      }
+    });
+
+    // Create students
+    const updatedStudents = [...this.state.students];
+    const existingNisns = new Set(this.state.students.map((s) => s.nisn));
+
+    incomingStudents.forEach((st) => {
+      const key = st.className.trim().toLowerCase();
+      const targetClass = classMap.get(key);
+      if (targetClass) {
+        const studentId = `st-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+        const studentNisn = st.nisn ? st.nisn.trim() : `00${Math.floor(10000000 + Math.random() * 90000000)}`;
+
+        if (!existingNisns.has(studentNisn)) {
+          existingNisns.add(studentNisn);
+          updatedStudents.push({
+            id: studentId,
+            classId: targetClass.id,
+            name: st.name.trim(),
+            nisn: studentNisn,
+            nis: st.nis ? st.nis.trim() : `${Math.floor(1000 + Math.random() * 9000)}`,
+            gender: st.gender === 'P' ? 'P' : 'L',
+            parentName: st.parentName ? st.parentName.trim() : 'Orang Tua Siswa',
+            parentPhone: st.parentPhone ? st.parentPhone.trim() : '0812-3456-7890',
+            address: 'Alamat Siswa',
+          });
+          studentsAddedCount++;
+        }
+      }
+    });
+
+    // Recalculate totalStudents for all updated classes
+    const finalClasses = updatedClasses.map((c) => {
+      const count = updatedStudents.filter((s) => s.classId === c.id).length;
+      return { ...c, totalStudents: count };
+    });
+
+    this.state = {
+      ...this.state,
+      classes: finalClasses,
+      students: updatedStudents,
+    };
+    this.notify();
+
+    return {
+      success: true,
+      classesAdded: classesAddedCount,
+      studentsAdded: studentsAddedCount,
+      message: `Berhasil mengimpor ${classesAddedCount} kelas dan ${studentsAddedCount} siswa ke dalam sistem!`,
+    };
   }
 
   // Attendance
